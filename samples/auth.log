@@ -1,0 +1,17 @@
+Sep 23 18:42:13 server sshd[4281]: Failed password for root from 192.0.2.10 port 52341 ssh2
+Sep 23 18:42:16 server sshd[4284]: Failed password for root from 192.0.2.10 port 52342 ssh2
+Sep 23 18:42:19 server sshd[4287]: Failed password for root from 192.0.2.10 port 52343 ssh2
+Sep 23 18:42:22 server sshd[4290]: Failed password for root from 192.0.2.10 port 52344 ssh2
+Sep 23 18:42:25 server sshd[4293]: Failed password for root from 192.0.2.10 port 52345 ssh2
+Sep 23 18:42:27 server sshd[4294]: Failed password for root from 192.0.2.10 port 52346 ssh2
+
+Sep 23 18:44:10 server sshd[4300]: Failed password for developer from 198.51.100.20 port 53101 ssh2
+Sep 23 18:44:30 server sshd[4302]: Failed password for developer from 198.51.100.20 port 53102 ssh2
+
+Sep 23 18:45:02 server sshd[4310]: Accepted password for developer from 198.51.100.30 port 53122 ssh2
+
+
+Sep 23 19:00:00 server sshd[5001]: Failed password for developer from 203.0.113.10 port 54001 ssh2
+Sep 23 19:00:05 server sshd[5002]: Failed password for developer from 203.0.113.10 port 54002 ssh2
+Sep 23 19:00:10 server sshd[5003]: Failed password for developer from 203.0.113.10 port 54003 ssh2
+Sep 23 19:00:20 server sshd[5004]: Accepted password for developer from 203.0.113.10 port 54004 ssh2

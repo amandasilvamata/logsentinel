@@ -1,0 +1,15 @@
+Sep 29 20:00:00 server sshd[6001]: Failed password for root from 192.0.2.50 port 55001 ssh2
+Sep 29 20:00:08 server sshd[6002]: Failed password for root from 192.0.2.50 port 55002 ssh2
+Sep 29 20:00:16 server sshd[6003]: Failed password for root from 192.0.2.50 port 55003 ssh2
+Sep 29 20:00:24 server sshd[6004]: Failed password for root from 192.0.2.50 port 55004 ssh2
+Sep 29 20:00:32 server sshd[6005]: Failed password for root from 192.0.2.50 port 55005 ssh2
+
+Sep 29 20:05:00 server sshd[6010]: Failed password for developer from 198.51.100.40 port 55101 ssh2
+Sep 29 20:15:00 server sshd[6011]: Failed password for developer from 198.51.100.40 port 55102 ssh2
+
+Sep 29 20:20:00 server sshd[6020]: Failed password for analyst from 203.0.113.25 port 55201 ssh2
+Sep 29 20:20:06 server sshd[6021]: Failed password for analyst from 203.0.113.25 port 55202 ssh2
+Sep 29 20:20:12 server sshd[6022]: Failed password for analyst from 203.0.113.25 port 55203 ssh2
+Sep 29 20:20:20 server sshd[6023]: Accepted password for analyst from 203.0.113.25 port 55204 ssh2
+
+Sep 29 20:30:00 server sshd[6030]: Accepted password for developer from 198.51.100.60 port 55301 ssh2
