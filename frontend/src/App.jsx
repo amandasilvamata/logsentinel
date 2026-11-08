@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import FileUpload from './components/FileUpload.jsx'
 import AnalysisSummary from './components/AnalysisSummary.jsx'
 import AlertList from './components/AlertList.jsx'
 
-const API_URL = 'http://127.0.0.1:8000/analyze'
+const API_URL = '/api/analyze'
 
 function App() {
   const [file, setFile] = useState(null)
@@ -12,10 +12,14 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const resultsRef = useRef(null)
 
+  useEffect(() => {
+    if (result) resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [result])
+
   function handleFileSelect(selectedFile) {
     if (!selectedFile || isAnalyzing) return
     setResult(null)
-    if (!/\.(log|txt)$/.test(selectedFile.name)) {
+    if (!/\.(log|txt)$/i.test(selectedFile.name)) {
       setFile(null)
       setError('Choose a .log or .txt file to continue.')
       return
@@ -23,6 +27,11 @@ function App() {
     if (selectedFile.size === 0) {
       setFile(null)
       setError('This file is empty. Choose a log with content.')
+      return
+    }
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setFile(null)
+      setError('Choose a file smaller than 10 MB.')
       return
     }
     setError('')
@@ -49,7 +58,6 @@ function App() {
         throw new Error('The analysis server returned an unexpected response.')
       }
       setResult(payload)
-      requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
     } catch (requestError) {
       setError(requestError instanceof TypeError
         ? 'Cannot reach the local analysis server. Start FastAPI at 127.0.0.1:8000 and try again.'
@@ -71,7 +79,7 @@ function App() {
         <div className="hero-grid" aria-hidden="true"><span>AUTH / 001</span><span>INPUT → SIGNAL</span><span>RULESET / 03</span></div>
         <div className="hero-meta"><span>INDEPENDENT SECURITY UTILITY</span><span>01 — 03 / FIELD NOTES</span></div>
         <div className="hero-copy">
-          <p className="system-status"><span className="status-dot" /> SYSTEM ONLINE <span className="status-divider">/</span> LOCAL ANALYSIS</p>
+          <p className="system-status"><span className="status-dot" /> LOCAL TOOL <span className="status-divider">/</span> LOCAL ANALYSIS</p>
           <h1 id="hero-title"><span>LOG</span><span>SENTINEL<span className="hero-period">.</span></span></h1>
           <div className="hero-description">
             <p>Linux authentication log analysis for detecting suspicious access patterns.</p>
@@ -89,7 +97,7 @@ function App() {
       <div ref={resultsRef}>
         {result && <>
           <AnalysisSummary result={result} />
-          <AlertList alerts={result.alerts} />
+          <AlertList alerts={result.alerts} eventsFound={result.file.events_found} />
         </>}
       </div>
     </main>

@@ -9,7 +9,7 @@ function AnalysisSummary({ result }) {
   ]
 
   return <section className="summary-section" id="results" aria-labelledby="summary-title">
-    <div className="section-bar"><span>02 / FINDINGS</span><span>ANALYSIS COMPLETE</span></div>
+    <div className="section-bar"><span>02 / FINDINGS</span><span>FILE PROCESSED</span></div>
     <div className="summary-heading">
       <div>
         <p className="section-eyebrow">SOURCE / {result.file?.name || 'UNKNOWN FILE'}</p>

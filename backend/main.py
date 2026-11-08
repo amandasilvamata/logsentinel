@@ -4,8 +4,8 @@ from backend.parser import read_failed_attempts
 from backend.detector import detect_brute_force, detect_root_attacks, detect_success_after_failures
 
 if len(sys.argv) < 2:
-    print("Usage: python3 src/main.py <log_file>")
-    sys.exit()
+    print("Usage: python3 -m backend.main <log_file>")
+    sys.exit(1)
 
 
 log_file = sys.argv[1]
@@ -15,11 +15,11 @@ try:
 
 except FileNotFoundError:
     print(f"Error: file not found: {log_file}")
-    sys.exit()
+    sys.exit(1)
 
 except PermissionError:
     print(f"Error: permission denied: {log_file}")
-    sys.exit()
+    sys.exit(1)
 
 brute_force_alerts = detect_brute_force(events)
 root_alerts = detect_root_attacks(events)

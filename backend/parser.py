@@ -1,107 +1,75 @@
+import ipaddress
 import re
 from datetime import datetime
 
 
 def parse_lines(lines):
+    lines = list(lines)
     events = []
 
-    for line in lines:
+    # Logs tradicionais não informam o ano. Usamos o ano atual para o
+    # último evento e voltamos um ano em cada passagem de janeiro para dezembro.
+    years = {}
+    year = datetime.now().year
+    next_month = None
+    months = {name: number for number, name in enumerate(
+        ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], 1
+    )}
+    for index in range(len(lines) - 1, -1, -1):
+        date = re.match(r"^(\w+)\s+\d+\s+\d+:\d+:\d+", lines[index])
+        if date and date.group(1) in months:
+            month = months[date.group(1)]
+            if month == 12 and next_month == 1:
+                year -= 1
+            years[index] = year
+            next_month = month
 
-        # Identifica se o evento foi uma falha ou um login bem-sucedido.
+    for index, line in enumerate(lines):
         if "Failed password" in line:
             status = "failed"
-
-            user_match = re.search(
-                r"Failed password for (\w+)",
-                line
-            )
-
+            user_match = re.search(r"Failed password for (?:invalid user )?(\S+)", line)
         elif "Accepted password" in line:
             status = "success"
-
-            user_match = re.search(
-                r"Accepted password for (\w+)",
-                line
-            )
-
+            user_match = re.search(r"Accepted password for (\S+)", line)
         else:
-            # Se não for um evento que nos interessa, ignoramos.
             continue
 
-        ip_match = re.search(
-            r"from (\d+\.\d+\.\d+\.\d+)",
-            line
-        )
-
-        # Formato:
-        # 2026-09-23 18:42:13
-        full_date_match = re.search(
-            r"^(\d{4})-(\d{2})-(\d{2})\s+(\d+:\d+:\d+)",
-            line
-        )
-
-        # Formato tradicional:
-        # Sep 23 18:42:13
-        traditional_date_match = re.search(
-            r"^(\w+)\s+(\d+)\s+(\d+:\d+:\d+)",
-            line
-        )
-
+        ip_match = re.search(r"from (\S+)", line)
         if not ip_match or not user_match:
             continue
-
-        ip = ip_match.group(1)
-        user = user_match.group(1)
-
-        if full_date_match:
-            year = full_date_match.group(1)
-            month = full_date_match.group(2)
-            day = full_date_match.group(3)
-            time_text = full_date_match.group(4)
-
-            date_text = f"{year}-{month}-{day} {time_text}"
-
-            timestamp = datetime.strptime(
-                date_text,
-                "%Y-%m-%d %H:%M:%S"
-            )
-
-        elif traditional_date_match:
-            month = traditional_date_match.group(1)
-            day = traditional_date_match.group(2)
-            time_text = traditional_date_match.group(3)
-
-            # O formato tradicional não possui ano,
-            # então usamos o ano atual como fallback.
-            current_year = datetime.now().year
-
-            date_text = (
-                f"{current_year} "
-                f"{month} {day} {time_text}"
-            )
-
-            timestamp = datetime.strptime(
-                date_text,
-                "%Y %b %d %H:%M:%S"
-            )
-
-        else:
+        try:
+            ip = str(ipaddress.ip_address(ip_match.group(1)))
+        except ValueError:
             continue
 
-        event = {
+        full_date = re.match(r"^(\d{4}-\d{2}-\d{2})\s+(\d+:\d+:\d+)", line)
+        traditional_date = re.match(r"^(\w+)\s+(\d+)\s+(\d+:\d+:\d+)", line)
+        try:
+            if full_date:
+                timestamp = datetime.strptime(
+                    f"{full_date.group(1)} {full_date.group(2)}", "%Y-%m-%d %H:%M:%S"
+                )
+            elif traditional_date and index in years:
+                month = months[traditional_date.group(1)]
+                timestamp = datetime.strptime(
+                    f"{years[index]}-{month:02d}-{traditional_date.group(2)} {traditional_date.group(3)}",
+                    "%Y-%m-%d %H:%M:%S"
+                )
+            else:
+                continue
+        except ValueError:
+            # Uma linha com data inválida não deve interromper todo o arquivo.
+            continue
+
+        events.append({
             "ip": ip,
-            "user": user,
+            "user": user_match.group(1),
             "timestamp": timestamp,
             "status": status
-        }
-
-        events.append(event)
-
+        })
     return events
 
 
 def read_failed_attempts(log_file):
-    # Esta função continua sendo usada pelo main.py.
-    # Ela abre o arquivo e envia suas linhas para parse_lines().
-    with open(log_file, "r") as file:
+    with open(log_file, "r", encoding="utf-8") as file:
         return parse_lines(file)

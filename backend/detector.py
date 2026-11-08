@@ -8,6 +8,8 @@ def detect_brute_force(events):
     attempts_by_ip = {}
 
     for event in events:
+        if event["status"] != "failed":
+            continue
         ip = event["ip"]
         timestamp = event["timestamp"]
 
@@ -71,72 +73,49 @@ ROOT_ATTEMPT_THRESHOLD = 3
 
 def detect_root_attacks(events):
     alerts = []
-
-    root_attempts_by_ip = {}
-
+    root_by_ip = {}
     for event in events:
-        ip = event["ip"]
-        user = event["user"]
+        if event["status"] == "failed" and event["user"] == "root":
+            root_by_ip.setdefault(event["ip"], []).append(event["timestamp"])
 
-        if user != "root":
-            continue
-
-        if ip not in root_attempts_by_ip:
-            root_attempts_by_ip[ip] = 0
-
-        root_attempts_by_ip[ip] += 1
-
-    for ip, attempts in root_attempts_by_ip.items():
-
-        if attempts >= ROOT_ATTEMPT_THRESHOLD:
-
-            alert = {
-                "type": "root_attack",
-                "severity": "high",
-                "ip": ip,
-                "attempts": attempts,
-                "user": "root"
-            }
-
-            alerts.append(alert)
-
+    for ip, attempts in root_by_ip.items():
+        attempts.sort()
+        start = 0
+        best_count = 0
+        for end in range(len(attempts)):
+            while (attempts[end] - attempts[start]).total_seconds() > TIME_WINDOW:
+                start += 1
+            best_count = max(best_count, end - start + 1)
+        if best_count >= ROOT_ATTEMPT_THRESHOLD:
+            alerts.append({"type": "root_attack", "severity": "high", "ip": ip,
+                           "attempts": best_count, "user": "root"})
     return alerts
+
 
 FAILED_BEFORE_SUCCESS_THRESHOLD = 3
 
 
 def detect_success_after_failures(events):
     alerts = []
+    failed_attempts = {}
 
-    events.sort(key=lambda event: event["timestamp"])
+    # sorted cria uma nova lista e preserva a ordem recebida pelo chamador.
+    for event in sorted(events, key=lambda event: event["timestamp"]):
+        key = (event["ip"], event["user"])
+        timestamp = event["timestamp"]
+        previous = failed_attempts.get(key, [])
+        previous = [time for time in previous
+                    if (timestamp - time).total_seconds() <= TIME_WINDOW]
 
-    failed_attempts_by_ip = {}
-
-    for event in events:
-        ip = event["ip"]
-        status = event["status"]
-
-        if ip not in failed_attempts_by_ip:
-            failed_attempts_by_ip[ip] = 0
-
-        if status == "failed":
-            failed_attempts_by_ip[ip] += 1
-
-        elif status == "success":
-
-            if failed_attempts_by_ip[ip] >= FAILED_BEFORE_SUCCESS_THRESHOLD:
-
-                alert = {
-                    "type": "success_after_failures",
-                    "severity": "critical",
-                    "ip": ip,
-                    "failed_attempts": failed_attempts_by_ip[ip],
-                    "user": event["user"],
-                    "timestamp": event["timestamp"]
-                }
-
-                alerts.append(alert)
-
-            failed_attempts_by_ip[ip] = 0
-
+        if event["status"] == "failed":
+            previous.append(timestamp)
+            failed_attempts[key] = previous
+        elif event["status"] == "success":
+            if len(previous) >= FAILED_BEFORE_SUCCESS_THRESHOLD:
+                alerts.append({
+                    "type": "success_after_failures", "severity": "critical",
+                    "ip": event["ip"], "failed_attempts": len(previous),
+                    "user": event["user"], "timestamp": timestamp
+                })
+            failed_attempts[key] = []
     return alerts

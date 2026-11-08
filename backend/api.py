@@ -38,13 +38,16 @@ async def analyze_log(file: UploadFile):
             detail="No file was provided."
         )
 
-    if not file.filename.endswith((".log", ".txt")):
+    if not file.filename.lower().endswith((".log", ".txt")):
         raise HTTPException(
             status_code=400,
             detail="Only .log and .txt files are allowed."
         )
 
-    contents = await file.read()
+    # Limita o upload a 10 MB antes de processar o arquivo em memória.
+    contents = await file.read(10 * 1024 * 1024 + 1)
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File exceeds the 10 MB limit.")
 
     if not contents:
         raise HTTPException(

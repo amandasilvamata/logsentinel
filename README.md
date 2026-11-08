@@ -65,7 +65,7 @@ Time window: 14 seconds
 
 ### Root Account Targeting
 
-The system identifies repeated authentication attempts directed at the Linux `root` account.
+The system identifies 3 or more failed authentication attempts directed at the Linux `root` account from the same IP within 60 seconds.
 
 Example:
 
@@ -81,7 +81,7 @@ Severity: high
 
 ### Successful Login After Repeated Failures
 
-LogSentinel can detect situations where the same IP generates multiple failed authentication attempts and later successfully logs in.
+LogSentinel detects 3 or more failed attempts followed by a successful login within 60 seconds, for the same IP and user.
 
 Example:
 
@@ -345,7 +345,7 @@ npm install
 npm run dev
 ```
 
-The frontend will normally be available at:
+Keep the backend running in the first terminal. The Vite development server forwards `/api` requests to the backend on `127.0.0.1:8000`. The frontend will normally be available at:
 
 ```text
 http://localhost:5173
@@ -398,7 +398,7 @@ Current detector tests cover:
 Expected result:
 
 ```text
-4 passed
+8 passed
 ```
 
 ---
@@ -464,6 +464,15 @@ Possible future improvements include:
 - exportable incident reports;
 - Docker support;
 - automated CI tests with GitHub Actions.
+
+---
+
+## Supported logs and limitations
+
+- The parser recognizes SSH `Failed password` and `Accepted password` events, including IPv4 and IPv6. Other events and malformed lines are ignored. A result with zero recognized events does not mean the log is safe.
+- Traditional dates such as `Dec 31 23:59:59` have no year. The last traditional date is assigned the current year; earlier December-to-January crossings are adjusted assuming the file is in chronological order. The real year of an old log cannot be determined from those dates alone. Use logs with explicit years when the actual year matters.
+- Each upload is limited to 10 MB. The frontend proxy is for the Vite development server; a deployed frontend needs a server or proxy configured to forward `/api` to the backend.
+- Thresholds are simplified educational rules. A single IP may represent multiple people, and alerts require investigation.
 
 ---
 

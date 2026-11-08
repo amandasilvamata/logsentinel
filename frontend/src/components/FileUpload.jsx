@@ -70,10 +70,10 @@ function FileUpload({ file, onFileSelect, onAnalyze, isAnalyzing, error }) {
         <div className="file-register">
           <div><span>FILE</span><strong title={file?.name}>{file?.name || 'No file selected'}</strong></div>
           <div><span>SIZE</span><strong>{file ? formatBytes(file.size) : '—'}</strong></div>
-          <div><span>FORMAT</span><strong id="upload-requirements">.LOG / .TXT</strong></div>
+          <div><span>FORMAT</span><strong id="upload-requirements">.LOG / .TXT · MAX 10 MB</strong></div>
         </div>
         <div className="upload-action-row">
-          <p>Files are sent to your local analysis server at 127.0.0.1:8000.</p>
+          <p>Files are sent to the analysis server.</p>
           <button type="button" className="analyze-button" onClick={onAnalyze} disabled={!file || isAnalyzing}>
             {isAnalyzing ? 'ANALYZING…' : 'ANALYZE FILE'} <span aria-hidden="true">↗</span>
           </button>
